@@ -24,7 +24,7 @@ EOF
 
 user=
 name=
-token_loc="$(echo ~/.github/script-token)"
+token_loc="$(echo ~/.github/token)"
 remote=
 push=
 while getopts "hu:n:rp" option
