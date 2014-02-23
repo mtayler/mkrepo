@@ -1,0 +1,76 @@
+#!/bin/bash
+
+usage() {
+cat << EOF
+Usage: mkrepo -u <username> -r <repo name>
+Try 'mkrepo --help' for help
+EOF
+}
+
+help() {
+cat << EOF
+Make a new repository on GitHub.
+
+Usage: mkrepo -u <username> -r <repo name>
+Options:
+-h,     Show this message
+-u,     Username
+-n,     Repository name
+-t,     API token location (default ~/.github/script-token)
+-r,     Add remote to git repo after creating
+-p,     Set origin as master upstream and push after creating
+EOF
+}
+
+user=
+name=
+token_loc="$(echo ~/.github/script-token)"
+remote=
+push=
+while getopts "hu:n:rp" option
+do
+    case $option in
+        h)
+            help
+            exit 1
+            ;;
+        u)
+            user="$OPTARG"
+            ;;
+        n)
+            name="$OPTARG"
+            ;;
+        t)
+            token_loc="$OPTARG"
+            ;;
+        r)
+            remote=1
+            ;;
+        p)
+            push=1
+            ;;
+        *)
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+if [[ ! $user ]]; then
+    echo "User must be provided. Use 'mkrepo -h' for help." >&2
+    exit 2
+fi
+if [[ ! $name ]]; then
+    echo "Repository name must be provided. Use 'mkrepo -h' for help." >&2
+    exit 2
+fi
+
+curl -s -u "$user" -H "Authorization: $(cat $token_loc)" \
+    https://api.github.com/user/repos -d "{\"name\":\"$name\"}" >/dev/null
+
+if [[ $remote ]]; then
+    git remote add origin git@github.com:${user-default}/${name-default}.git
+fi
+if [[ $push ]]; then
+    git push -u origin master
+fi
